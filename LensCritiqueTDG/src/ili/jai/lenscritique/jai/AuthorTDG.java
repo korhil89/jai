@@ -19,7 +19,7 @@ public class AuthorTDG extends AbstractTDG<Author> {
 	private static final String DROP = "DROP TABLE Author";
 	private static final String FIND_BY_ID = "SELECT ID,PSEUDO,PASSWORD FROM Author a WHERE a.ID=?";
 	private static final String INSERT = "INSERT INTO Author (PSEUDO,PASSWORD) VALUES(?,?)";
-	private static final String UPDATE = "UPDATE Author a SET a.PSEUDO = ?, a.PASSWORD = ? WHERE t.ID = ?";
+	private static final String UPDATE = "UPDATE Author a SET a.PSEUDO = ?, a.PASSWORD = ? WHERE a.ID = ?";
 	private static final String DELETE = "DELETE FROM Author a WHERE a.ID = ?";
 	private static final String WHERE = "SELECT ID FROM Author a WHERE ";
 	private static final String ALL = "SELECT ID FROM Author";

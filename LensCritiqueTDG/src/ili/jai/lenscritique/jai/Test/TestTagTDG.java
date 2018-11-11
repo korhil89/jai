@@ -7,12 +7,15 @@ import java.sql.SQLException;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
 import ili.jai.lenscritique.data.Tag;
 import ili.jai.lenscritique.jai.TagTDG;
 import ili.jai.tdg.api.TDGRegistry;
 
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestTagTDG {
 
 	private TagTDG ttdg;

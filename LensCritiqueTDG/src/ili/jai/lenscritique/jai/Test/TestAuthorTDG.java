@@ -58,7 +58,7 @@ public class TestAuthorTDG {
 	}
 
 	@Test
-	public void test3UpdatingElement() throws SQLException {
+	public void test3UpdatingElementAuthor() throws SQLException {
 		Author a = atdg.findById(1);
 		assertEquals("John", a.getPseudo());
 		a.setPseudo("Billy");
