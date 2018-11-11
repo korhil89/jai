@@ -4,5 +4,9 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/LensCritiqueData"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/TDGAPI"/>
+	<classpathentry kind="lib" path="C:/Users/Loïc/Downloads/tdg-api.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Loïc/Downloads/lenscritique-data.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry kind="lib" path="C:/Users/Loïc/Downloads/derby.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

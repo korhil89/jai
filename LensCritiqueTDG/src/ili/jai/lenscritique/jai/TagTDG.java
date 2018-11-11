@@ -1,4 +1,5 @@
-package lil.jai.lenscritique.jai;
+package ili.jai.lenscritique.jai;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -13,8 +14,8 @@ import ili.jai.tdg.api.TDGRegistry;
 
 public class TagTDG extends AbstractTDG<Tag> {
 
-	private Connection conn;
-	private static final String CREATE = "CREATE TABLE Tag (ID BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY, LABEL VARCHAR(100) NOT NULL";
+	private Connection conn = TDGRegistry.getConnection();
+	private static final String CREATE = "CREATE TABLE Tag (ID BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY, LABEL VARCHAR(100) NOT NULL)";
 	private static final String DROP = "DROP TABLE Tag";
 	private static final String FIND_BY_ID = "SELECT ID,LABEL FROM Tag t WHERE t.ID=?";
 	private static final String INSERT = "INSERT INTO Tag (LABEL) VALUES(?)";
@@ -25,7 +26,7 @@ public class TagTDG extends AbstractTDG<Tag> {
 
 	@Override
 	public void createTable() throws SQLException {
-		try (Statement stm = conn.createStatement()) {
+		try (Statement stm = TDGRegistry.getConnection().createStatement()) {
 			stm.executeUpdate(CREATE);
 		}
 
@@ -33,7 +34,7 @@ public class TagTDG extends AbstractTDG<Tag> {
 
 	@Override
 	public void deleteTable() throws SQLException {
-		try (Statement stm = conn.createStatement()) {
+		try (Statement stm = TDGRegistry.getConnection().createStatement()) {
 			stm.executeUpdate(DROP);
 		}
 
@@ -59,7 +60,7 @@ public class TagTDG extends AbstractTDG<Tag> {
 	@Override
 	protected Tag retrieveFromDB(long id) throws SQLException {
 		Tag t = null;
-		try (PreparedStatement pst = conn.prepareStatement(FIND_BY_ID)) {
+		try (PreparedStatement pst = TDGRegistry.getConnection().prepareStatement(FIND_BY_ID)) {
 			pst.setLong(1, id);
 			try (ResultSet rs = pst.executeQuery()) {
 				if (rs.next()) {
@@ -75,7 +76,7 @@ public class TagTDG extends AbstractTDG<Tag> {
 
 	@Override
 	protected Tag insertIntoDB(Tag t) throws SQLException {
-		try (PreparedStatement pst = conn.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS)) {
+		try (PreparedStatement pst = TDGRegistry.getConnection().prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS)) {
 			pst.setString(1, t.getLabel());
 			int result = pst.executeUpdate();
 			assert result == 1;
@@ -90,7 +91,7 @@ public class TagTDG extends AbstractTDG<Tag> {
 
 	@Override
 	protected Tag updateIntoDB(Tag t) throws SQLException {
-		try (PreparedStatement pst = conn.prepareStatement(UPDATE)) {
+		try (PreparedStatement pst = TDGRegistry.getConnection().prepareStatement(UPDATE)) {
 			assert findById(t.getId()) == t;
 			pst.setString(1, t.getLabel());
 			pst.setLong(2, t.getId());
@@ -102,7 +103,7 @@ public class TagTDG extends AbstractTDG<Tag> {
 
 	@Override
 	protected Tag refreshFromDB(Tag t) throws SQLException {
-		try (PreparedStatement pst = conn.prepareStatement(FIND_BY_ID)) {
+		try (PreparedStatement pst = TDGRegistry.getConnection().prepareStatement(FIND_BY_ID)) {
 			pst.setLong(1, t.getId());
 			try (ResultSet rs = pst.executeQuery()) {
 				if (rs.next()) {
@@ -138,7 +139,5 @@ public class TagTDG extends AbstractTDG<Tag> {
 		}
 		return result;
 	}
-
-
 
 }

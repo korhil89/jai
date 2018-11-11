@@ -1,4 +1,5 @@
-package lil.jai.lenscritique.jai;
+package ili.jai.lenscritique.jai;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,10 +12,10 @@ import ili.jai.lenscritique.data.Author;
 import ili.jai.tdg.api.AbstractTDG;
 import ili.jai.tdg.api.TDGRegistry;
 
-public class AuthorTDG extends AbstractTDG<Author>{
+public class AuthorTDG extends AbstractTDG<Author> {
 
-	private Connection conn;
-	private static final String CREATE = "CREATE TABLE Author (ID BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY, PSEUDO VARCHAR(100) NOT NULL, PASSWORD VARCHAR(100) NOT NULL";
+	private Connection conn = TDGRegistry.getConnection();
+	private static final String CREATE = "CREATE TABLE Author (ID BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY, PSEUDO VARCHAR(100) NOT NULL, PASSWORD VARCHAR(100) NOT NULL)";
 	private static final String DROP = "DROP TABLE Author";
 	private static final String FIND_BY_ID = "SELECT ID,PSEUDO,PASSWORD FROM Author a WHERE a.ID=?";
 	private static final String INSERT = "INSERT INTO Author (PSEUDO,PASSWORD) VALUES(?,?)";
@@ -22,21 +23,21 @@ public class AuthorTDG extends AbstractTDG<Author>{
 	private static final String DELETE = "DELETE FROM Author a WHERE a.ID = ?";
 	private static final String WHERE = "SELECT ID FROM Author a WHERE ";
 	private static final String ALL = "SELECT ID FROM Author";
-	
+
 	@Override
 	public void createTable() throws SQLException {
-		try (Statement stm = conn.createStatement()) {
+		try (Statement stm = TDGRegistry.getConnection().createStatement()) {
 			stm.executeUpdate(CREATE);
 		}
-		
+
 	}
 
 	@Override
 	public void deleteTable() throws SQLException {
-		try (Statement stm = conn.createStatement()) {
+		try (Statement stm = TDGRegistry.getConnection().createStatement()) {
 			stm.executeUpdate(DROP);
 		}
-		
+
 	}
 
 	@Override
@@ -59,7 +60,7 @@ public class AuthorTDG extends AbstractTDG<Author>{
 	@Override
 	protected Author retrieveFromDB(long id) throws SQLException {
 		Author a = null;
-		try (PreparedStatement pst = conn.prepareStatement(FIND_BY_ID)) {
+		try (PreparedStatement pst = TDGRegistry.getConnection().prepareStatement(FIND_BY_ID)) {
 			pst.setLong(1, id);
 			try (ResultSet rs = pst.executeQuery()) {
 				if (rs.next()) {
@@ -76,7 +77,7 @@ public class AuthorTDG extends AbstractTDG<Author>{
 
 	@Override
 	protected Author insertIntoDB(Author a) throws SQLException {
-		try (PreparedStatement pst = conn.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS)) {
+		try (PreparedStatement pst = TDGRegistry.getConnection().prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS)) {
 			pst.setString(1, a.getPseudo());
 			pst.setString(2, a.getPassword());
 			int result = pst.executeUpdate();
@@ -92,7 +93,7 @@ public class AuthorTDG extends AbstractTDG<Author>{
 
 	@Override
 	protected Author updateIntoDB(Author a) throws SQLException {
-		try (PreparedStatement pst = conn.prepareStatement(UPDATE)) {
+		try (PreparedStatement pst = TDGRegistry.getConnection().prepareStatement(UPDATE)) {
 			assert findById(a.getId()) == a;
 			pst.setString(1, a.getPseudo());
 			pst.setString(2, a.getPassword());
@@ -105,7 +106,7 @@ public class AuthorTDG extends AbstractTDG<Author>{
 
 	@Override
 	protected Author refreshFromDB(Author a) throws SQLException {
-		try (PreparedStatement pst = conn.prepareStatement(FIND_BY_ID)) {
+		try (PreparedStatement pst = TDGRegistry.getConnection().prepareStatement(FIND_BY_ID)) {
 			pst.setLong(1, a.getId());
 			try (ResultSet rs = pst.executeQuery()) {
 				if (rs.next()) {
@@ -120,7 +121,7 @@ public class AuthorTDG extends AbstractTDG<Author>{
 
 	@Override
 	protected Author deleteFromDB(Author a) throws SQLException {
-		try (PreparedStatement pst = conn.prepareStatement(DELETE)) {
+		try (PreparedStatement pst = TDGRegistry.getConnection().prepareStatement(DELETE)) {
 			assert findById(a.getId()) == a;
 			pst.setLong(1, a.getId());
 			int result = pst.executeUpdate();
@@ -141,7 +142,5 @@ public class AuthorTDG extends AbstractTDG<Author>{
 		}
 		return result;
 	}
-
-
 
 }
