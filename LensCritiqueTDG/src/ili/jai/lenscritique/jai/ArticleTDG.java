@@ -1,5 +1,7 @@
 package ili.jai.lenscritique.jai;
 
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -9,6 +11,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.imageio.ImageIO;
+
 import org.apache.derby.iapi.types.SQLDate;
 
 import ili.jai.lenscritique.data.Article;
@@ -16,10 +20,10 @@ import ili.jai.lenscritique.data.Author;
 import ili.jai.tdg.api.AbstractTDG;
 import ili.jai.tdg.api.TDGRegistry;
 
-public class ArticleTDG extends AbstractTDG<Article>{
+public class ArticleTDG extends AbstractTDG<Article> {
 
 	private Connection conn;
-	private static final String CREATE = "CREATE TABLE Article (ID BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY, TITLE VARCHAR(100) NOT NULL, CONTENT VARCHAR(100) NOT NULL, IDAUTHOR BIGINT NOT NULL, DATE DATE NOT NULL, ILLUSTRATION)";
+	private static final String CREATE = "CREATE TABLE Article (ID BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY, TITLE VARCHAR(100) NOT NULL, CONTENT VARCHAR(100) NOT NULL, IDAUTHOR BIGINT NOT NULL, DATE DATE NOT NULL, ILLUSTRATION BLOB)";
 	private static final String DROP = "DROP TABLE Article";
 	private static final String FIND_BY_ID = "SELECT ID,TITLE,CONTENT,IDAUTHOR,DATE,ILLUSTRATION FROM Article a WHERE a.ID=?";
 	private static final String INSERT = "INSERT INTO Article (TITLE,CONTENT,IDAUTHOR,DATE,ILLUSTRATION) VALUES(?,?,?,?,?)";
@@ -27,7 +31,7 @@ public class ArticleTDG extends AbstractTDG<Article>{
 	private static final String DELETE = "DELETE FROM Article a WHERE a.ID = ?";
 	private static final String WHERE = "SELECT ID FROM Article a WHERE ";
 	private static final String ALL = "SELECT ID FROM Article";
-	
+
 	@Override
 	public void createTable() throws SQLException {
 		try (Statement stm = TDGRegistry.getConnection().createStatement()) {
@@ -74,7 +78,15 @@ public class ArticleTDG extends AbstractTDG<Article>{
 					a.setContent(rs.getString(3));
 					a.setAuthor(new AuthorTDG().retrieveFromDB(rs.getLong(4)));
 					a.setDate(rs.getDate(5).toLocalDate());
-					a.setIllustration(rs.getBlob(6));
+
+					try {
+						BufferedImage image = ImageIO.read(rs.getBlob(6).getBinaryStream());
+						a.setIllustration(image);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+
 				}
 			}
 		}
