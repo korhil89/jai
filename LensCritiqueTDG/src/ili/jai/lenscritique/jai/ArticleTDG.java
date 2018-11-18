@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,12 +26,12 @@ import ili.jai.tdg.api.TDGRegistry;
 
 public class ArticleTDG extends AbstractTDG<Article> {
 
-	private Connection conn=TDGRegistry.getConnection();
-	private static final String CREATE = "CREATE TABLE Article (ID BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY, TITLE VARCHAR(100) NOT NULL, CONTENT VARCHAR(100) NOT NULL, IDAUTHOR BIGINT NOT NULL, DATE DATE NOT NULL, ILLUSTRATION BLOB)";
+	private Connection conn = TDGRegistry.getConnection();
+	private static final String CREATE = "CREATE TABLE Article (ID BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY, TITLE VARCHAR(100) NOT NULL, CONTENT VARCHAR(100) NOT NULL, IDAUTHOR BIGINT REFERENCES Author(ID), DATE DATE NOT NULL, ILLUSTRATION BLOB)";
 	private static final String DROP = "DROP TABLE Article";
 	private static final String FIND_BY_ID = "SELECT ID,TITLE,CONTENT,IDAUTHOR,DATE,ILLUSTRATION FROM Article a WHERE a.ID=?";
 	private static final String INSERT = "INSERT INTO Article (TITLE,CONTENT,IDAUTHOR,DATE,ILLUSTRATION) VALUES(?,?,?,?,?)";
-	private static final String UPDATE = "UPDATE Article a SET a.TITLE = ?, a.CONTENT = ?, a.IDAUTHOR = ?, a.DATE = ?,a.ILLUSTRATION = ? WHERE t.ID = ?";
+	private static final String UPDATE = "UPDATE Article a SET a.TITLE = ?, a.CONTENT = ?, a.IDAUTHOR = ?, a.DATE = ?,a.ILLUSTRATION = ? WHERE a.ID = ?";
 	private static final String DELETE = "DELETE FROM Article a WHERE a.ID = ?";
 	private static final String WHERE = "SELECT ID FROM Article a WHERE ";
 	private static final String ALL = "SELECT ID FROM Article";
@@ -79,15 +80,20 @@ public class ArticleTDG extends AbstractTDG<Article> {
 					a.setId(rs.getLong(1));
 					a.setTitle(rs.getString(2));
 					a.setContent(rs.getString(3));
-					a.setAuthor(new AuthorTDG().retrieveFromDB(rs.getLong(4)));
-					a.setDate(rs.getDate(5).toLocalDate());
 
-					try {
-						BufferedImage image = ImageIO.read(rs.getBlob(6).getBinaryStream());
-						a.setIllustration(image);
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+					long autheurId = rs.getLong(4);
+					if (autheurId != 0) {
+						a.setAuthor(new AuthorTDG().retrieveFromDB(autheurId));
+					}
+					a.setDate(rs.getDate(5).toLocalDate());
+					if (rs.getBlob(6) != null) {
+						try {
+							BufferedImage image = ImageIO.read(rs.getBlob(6).getBinaryStream());
+							a.setIllustration(image);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 					}
 
 				}
@@ -101,9 +107,23 @@ public class ArticleTDG extends AbstractTDG<Article> {
 		try (PreparedStatement pst = conn.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS)) {
 			pst.setString(1, a.getTitle());
 			pst.setString(2, a.getContent());
-			pst.setLong(3, a.getAuthor().getId());
+			if (a.getAuthor() == null) {
+				pst.setNull(3, Types.BIGINT);
+			} else {
+				Author auteur = a.getAuthor();
+				if (auteur.getId() == 0) {
+					TDGRegistry.findTDG(Author.class).insert(auteur);
+				}
+				pst.setLong(3, a.getAuthor().getId());
+			}
 			pst.setDate(4, java.sql.Date.valueOf(a.getDate()));
-			pst.setBlob(5, imageToBlob(a.getIllustration()) );
+
+			if (a.getIllustration() == null) {
+				pst.setNull(5, Types.BLOB);
+			} else {
+				pst.setBlob(5, imageToBlob(a.getIllustration()));
+			}
+
 			int result = pst.executeUpdate();
 			assert result == 1;
 			try (ResultSet keys = pst.getGeneratedKeys()) {
@@ -121,9 +141,24 @@ public class ArticleTDG extends AbstractTDG<Article> {
 			assert findById(a.getId()) == a;
 			pst.setString(1, a.getTitle());
 			pst.setString(2, a.getContent());
-			pst.setLong(3,  a.getAuthor().getId());
+			if (a.getAuthor() == null) {
+				pst.setNull(3, Types.BIGINT);
+			} else {
+				Author auteur = a.getAuthor();
+				if (auteur.getId() == 0) {
+					TDGRegistry.findTDG(Author.class).insert(auteur);
+				} else {
+					TDGRegistry.findTDG(Author.class).update(auteur);
+				}
+				pst.setLong(3, a.getAuthor().getId());
+			}
 			pst.setDate(4, java.sql.Date.valueOf(a.getDate()));
-			pst.setBlob(5, imageToBlob(a.getIllustration()));
+			if (a.getIllustration() == null) {
+				pst.setNull(5, Types.BLOB);
+			} else {
+				pst.setBlob(5, imageToBlob(a.getIllustration()));
+			}
+			pst.setLong(6, a.getId());
 			int result = pst.executeUpdate();
 			assert result == 1;
 			return a;
@@ -137,11 +172,22 @@ public class ArticleTDG extends AbstractTDG<Article> {
 			try (ResultSet rs = pst.executeQuery()) {
 				if (rs.next()) {
 					a.setId(rs.getLong(1));
-					pst.setString(1, a.getTitle());
-					pst.setString(2, a.getContent());
-					pst.setLong(3,  a.getAuthor().getId());
-					pst.setDate(4, java.sql.Date.valueOf(a.getDate()));
-					pst.setBlob(5,imageToBlob(a.getIllustration()) );
+					a.setTitle(rs.getString(2));
+					a.setContent(rs.getString(3));
+					long auteurId = rs.getLong(4);
+					if (auteurId != 0) {
+						a.setAuthor(TDGRegistry.findTDG(Author.class).findById(auteurId));
+					}
+					a.setDate(rs.getDate(5).toLocalDate());
+
+					if (rs.getBlob(6) != null) {
+						try {
+							BufferedImage image = ImageIO.read(rs.getBlob(6).getBinaryStream());
+							a.setIllustration(image);
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
 				}
 			}
 		}
@@ -171,14 +217,15 @@ public class ArticleTDG extends AbstractTDG<Article> {
 		}
 		return result;
 	}
-	
+
 	public Blob imageToBlob(Image img) throws SQLException {
-		BufferedImage buffered = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_ARGB);
-		buffered.getGraphics().drawImage(img, 0, 0 , null);
-		
+		BufferedImage buffered = new BufferedImage(img.getWidth(null), img.getHeight(null),
+				BufferedImage.TYPE_INT_ARGB);
+		buffered.getGraphics().drawImage(img, 0, 0, null);
+
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try {
-			ImageIO.write(buffered, "jpg", baos );
+			ImageIO.write(buffered, "jpg", baos);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
