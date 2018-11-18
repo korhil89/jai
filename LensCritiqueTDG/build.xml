@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="build" name="LensCritiqueTDG">
+    <property environment="env"/>
+    <property name="ECLIPSE_HOME" value="../../../eclipse/jee-2018-09/eclipse/"/>
+    <property name="junit.output.dir" value="junit"/>
+    <property name="TDGAPI.location" value="../../TDGAPI"/>
+    <property name="LensCritiqueData.location" value="../../lenscritique-data"/>
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.8"/>
+    <property name="source" value="1.8"/>
+    <path id="TDGAPI.classpath">
+        <pathelement location="${TDGAPI.location}/bin"/>
+        <pathelement location="${TDGAPI.location}/../../Downloads/derby.jar"/>
+    </path>
+    <path id="LensCritiqueData.classpath">
+        <pathelement location="${LensCritiqueData.location}/bin"/>
+        <path refid="TDGAPI.classpath"/>
+    </path>
+    <path id="JUnit 4.libraryclasspath">
+        <pathelement location="../../../.p2/pool/plugins/org.junit_4.12.0.v201504281640/junit.jar"/>
+        <pathelement location="../../../.p2/pool/plugins/org.hamcrest.core_1.3.0.v20180420-1519.jar"/>
+    </path>
+    <path id="LensCritiqueTDG.classpath">
+        <pathelement location="bin"/>
+        <path refid="LensCritiqueData.classpath"/>
+        <path refid="TDGAPI.classpath"/>
+        <path refid="JUnit 4.libraryclasspath"/>
+        <pathelement location="../../../Downloads/derby.jar"/>
+    </path>
+    <target name="init">
+        <mkdir dir="bin"/>
+        <copy includeemptydirs="false" todir="bin">
+            <fileset dir="src">
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+    <target name="clean">
+        <delete dir="bin"/>
+    </target>
+    <target depends="clean" name="cleanall">
+        <ant antfile="build.xml" dir="${TDGAPI.location}" inheritAll="false" target="clean"/>
+        <ant antfile="build.xml" dir="${LensCritiqueData.location}" inheritAll="false" target="clean"/>
+    </target>
+    <target depends="build-subprojects,build-project" name="build"/>
+    <target name="build-subprojects">
+        <ant antfile="build.xml" dir="${TDGAPI.location}" inheritAll="false" target="build-project">
+            <propertyset>
+                <propertyref name="build.compiler"/>
+            </propertyset>
+        </ant>
+        <ant antfile="build.xml" dir="${LensCritiqueData.location}" inheritAll="false" target="build-project">
+            <propertyset>
+                <propertyref name="build.compiler"/>
+            </propertyset>
+        </ant>
+    </target>
+    <target depends="init" name="build-project">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="bin" includeantruntime="false" source="${source}" target="${target}">
+            <src path="src"/>
+            <classpath refid="LensCritiqueTDG.classpath"/>
+        </javac>
+    </target>
+    <target description="Build all projects which reference this project. Useful to propagate changes." name="build-refprojects"/>
+    <target description="copy Eclipse compiler jars to ant lib directory" name="init-eclipse-compiler">
+        <copy todir="${ant.library.dir}">
+            <fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar"/>
+        </copy>
+        <unzip dest="${ant.library.dir}">
+            <patternset includes="jdtCompilerAdapter.jar"/>
+            <fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar"/>
+        </unzip>
+    </target>
+    <target description="compile project with Eclipse compiler" name="build-eclipse-compiler">
+        <property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter"/>
+        <antcall target="build"/>
+    </target>
+    <target name="LensCritiqueTDG">
+        <mkdir dir="${junit.output.dir}"/>
+        <junit fork="yes" printsummary="withOutAndErr">
+            <formatter type="xml"/>
+            <test name="ili.jai.lenscritique.jai.Test.TestArticleTDG" todir="${junit.output.dir}"/>
+            <test name="ili.jai.lenscritique.jai.Test.TestArticleWithTagTDG" todir="${junit.output.dir}"/>
+            <test name="ili.jai.lenscritique.jai.Test.TestAuthorTDG" todir="${junit.output.dir}"/>
+            <test name="ili.jai.lenscritique.jai.Test.TestCommentTDG" todir="${junit.output.dir}"/>
+            <test name="ili.jai.lenscritique.jai.Test.TestTagTDG" todir="${junit.output.dir}"/>
+            <jvmarg line="-ea"/>
+            <classpath refid="LensCritiqueTDG.classpath"/>
+        </junit>
+    </target>
+
+</project>

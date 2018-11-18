@@ -16,7 +16,7 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import ili.jai.lenscritique.data.Author;
-import ili.jai.lenscritique.jai.AuthorTDG;
+import ili.jai.lenscritique.jai.TDG.AuthorTDG;
 import ili.jai.tdg.api.TDGRegistry;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)

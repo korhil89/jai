@@ -12,7 +12,7 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import ili.jai.lenscritique.data.Tag;
-import ili.jai.lenscritique.jai.TagTDG;
+import ili.jai.lenscritique.jai.TDG.TagTDG;
 import ili.jai.tdg.api.TDGRegistry;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
